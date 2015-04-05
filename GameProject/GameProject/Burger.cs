@@ -117,23 +117,47 @@ namespace GameProject
 
         /// <summary>
         /// Updates the burger's location based on mouse. Also fires 
-        /// french fries as appropriate
+        /// French fries as appropriate
         /// </summary>
         /// <param name="gameTime">game time</param>
         /// <param name="mouse">the current state of the mouse</param>
         public void Update(GameTime gameTime, MouseState mouse)
         {
             // burger should only respond to input if it still has health
-
-                // move burger using mouse
-
-                // clamp burger in window
+            if (health > 0)
+            {
+                // move burger using mouse and clamp it (the X and Y properties already clamp it).
+                X = mouse.X;
+                Y = mouse.Y;
 
                 // update shooting allowed
+                //If shooting is disabled, 
+                //  If enough time has passed or if the player released the firing button, enable shooting.
+                if (!canShoot)
+                {
+                    elapsedCooldownTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
+
+                    if (elapsedCooldownTime >= GameConstants.BURGER_COOLDOWN_MILLISECONDS || mouse.LeftButton == ButtonState.Released)
+                    {
+                        canShoot = true;
+                        elapsedCooldownTime = 0;
+                    }
+                }
+
                 // timer concept (for animations) introduced in Chapter 7
 
                 // shoot if appropriate
-
+                if (mouse.LeftButton == ButtonState.Pressed && canShoot)
+                {
+                    //Create a new projectile to fire from the burger.
+                    canShoot = false;
+                    ProjectileType projectileType = ProjectileType.FrenchFries;
+                    int locationY = Y - GameConstants.FRENCH_FRIES_PROJECTILE_OFFSET;
+                    Projectile projectile = new Projectile(projectileType, Game1.GetProjectileSprite(projectileType), X, locationY,
+                        -GameConstants.FRENCH_FRIES_PROJECTILE_SPEED);
+                    Game1.AddProjectile(projectile);
+                }
+            }
         }
 
         /// <summary>

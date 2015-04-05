@@ -144,6 +144,21 @@ namespace GameProject
             BounceLeftRight();
 
             // fire projectile as appropriate
+            elapsedShotTime += (int)elapsedGameTime;
+
+            //If it is time to fire a projectile, reset when to fire again and create a new projectile.
+            if (elapsedShotTime > firingDelay)
+            {
+                elapsedShotTime = 0;
+                firingDelay = GetRandomFiringDelay();
+
+                ProjectileType projectileType = ProjectileType.TeddyBear;
+                int x = drawRectangle.Center.X;
+                int y = drawRectangle.Center.Y + GameConstants.TEDDY_BEAR_PROJECTILE_OFFSET;
+                Projectile projectile = new Projectile(projectileType, Game1.GetProjectileSprite(projectileType), x, y, GetProjectileYVelocity());
+                Game1.AddProjectile(projectile);
+            }
+
             // timer concept (for animations) introduced in Chapter 7
 
         }
@@ -203,7 +218,7 @@ namespace GameProject
         {
             if (drawRectangle.X < 0)
             {
-                // bounc off left
+                // bounce off left
                 drawRectangle.X = 0;
                 velocity.X *= -1;
             }
