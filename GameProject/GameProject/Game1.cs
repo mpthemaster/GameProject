@@ -87,10 +87,14 @@ namespace GameProject
             // load projectile and explosion sprites
             teddyBearProjectileSprite = Content.Load<Texture2D>("teddybearprojectile");
             frenchFriesSprite = Content.Load<Texture2D>("frenchfries");
+            explosionSpriteStrip = Content.Load<Texture2D>("explosion");
 
             // add initial game objects
             burger = new Burger(Content, "burger", GameConstants.WINDOW_WIDTH / 2, GameConstants.WINDOW_HEIGHT * 7 / 8, null);
-            SpawnBear();
+
+            //Spawn teddy bears.
+            for (int i = 0; i <= GameConstants.MAX_BEARS; i++)
+                SpawnBear();
 
             // set initial health and score strings
         }
@@ -135,20 +139,78 @@ namespace GameProject
             }
 
             // check and resolve collisions between teddy bears
+            for (int i = 0; i < bears.Count; i++)
+                for (int j = i + 1; j < bears.Count; j++)
+                {
+                    TeddyBear firstBear = bears[i];
+                    TeddyBear secondBear = bears[j];
+
+                    //If both bears are still active, check if they collided.
+                    if (firstBear.Active && secondBear.Active)
+                    {
+                        //Get collision data because if the bears collided they need to bounce off of each other.
+                        CollisionResolutionInfo collisonResolutionInfo = CollisionUtils.CheckCollision((int)gameTime.ElapsedGameTime.TotalMilliseconds,
+                            GameConstants.WINDOW_WIDTH, GameConstants.WINDOW_HEIGHT, firstBear.Velocity, firstBear.DrawRectangle, secondBear.Velocity,
+                            secondBear.DrawRectangle);
+
+                        //If the bears collided, resolve the collision
+                        if (collisonResolutionInfo != null)
+                        {
+                            //If the first bear has been bounced outside of the window, kill it.
+                            //Else the first bear has not been bounced outside of the window, so update its velocity and draw rectangle for the bounce.
+                            if (collisonResolutionInfo.FirstOutOfBounds)
+                                firstBear.Active = false;
+                            else
+                            {
+                                firstBear.Velocity = collisonResolutionInfo.FirstVelocity;
+                                firstBear.DrawRectangle = collisonResolutionInfo.FirstDrawRectangle;
+                            }
+
+                            //If the second bear has been bounced outside of the window, kill it.
+                            //Else the second bear has not been bounced outside of the window, so update its velocity and draw rectangle for the bounce.
+                            if (collisonResolutionInfo.SecondOutOfBounds)
+                                secondBear.Active = false;
+                            else
+                            {
+                                secondBear.Velocity = collisonResolutionInfo.SecondVelocity;
+                                secondBear.DrawRectangle = collisonResolutionInfo.SecondDrawRectangle;
+                            }
+                        }
+                    }
+                }
+
 
             // check and resolve collisions between burger and teddy bears
 
             // check and resolve collisions between burger and projectiles
 
-            // check and resolve collisions between teddy bears and projectiles
+            //Check and resolve collisions between teddy bears and projectiles.
+            foreach (TeddyBear bear in bears)
+                foreach (Projectile projectile in projectiles)
+                    if (projectile.Type == ProjectileType.FrenchFries && bear.Active && projectile.Active &&
+                        bear.CollisionRectangle.Intersects(projectile.CollisionRectangle))
+                    {
+                        bear.Active = false;
+                        projectile.Active = false;
+                        explosions.Add(new Explosion(explosionSpriteStrip, bear.Location.X, bear.Location.Y));
+                    }
 
             // clean out inactive teddy bears and add new ones as necessary
+            for (int i = bears.Count - 1; i >= 0; i--)
+                if (!bears[i].Active)
+                    bears.RemoveAt(i);
 
             // clean out inactive projectiles
+            for (int i = projectiles.Count - 1; i >= 0; i--)
+                if (!projectiles[i].Active)
+                    projectiles.RemoveAt(i);
 
             // clean out finished explosions
+            for (int i = explosions.Count - 1; i >= 0; i--)
+                if (explosions[i].Finished)
+                    explosions.RemoveAt(i);
 
-            base.Update(gameTime);
+                base.Update(gameTime);
         }
 
         /// <summary>
