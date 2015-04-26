@@ -93,7 +93,7 @@ namespace GameProject
             burger = new Burger(Content, "burger", GameConstants.WINDOW_WIDTH / 2, GameConstants.WINDOW_HEIGHT * 7 / 8, null);
 
             //Spawn teddy bears.
-            for (int i = 0; i <= GameConstants.MAX_BEARS; i++)
+            for (int i = 0; i < GameConstants.MAX_BEARS; i++)
                 SpawnBear();
 
             // set initial health and score strings
