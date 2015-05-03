@@ -181,8 +181,21 @@ namespace GameProject
 
 
             // check and resolve collisions between burger and teddy bears
+            foreach (TeddyBear bear in bears)
+                if (bear.Active && bear.CollisionRectangle.Intersects(burger.CollisionRectangle))
+                {
+                    bear.Active = false;
+                    burger.Health -= GameConstants.BEAR_DAMAGE;
+                    explosions.Add(new Explosion(explosionSpriteStrip, bear.Location.X, bear.Location.Y));
+                }
 
             // check and resolve collisions between burger and projectiles
+            foreach (Projectile projectile in projectiles)
+                if (projectile.Active && projectile.Type == ProjectileType.TeddyBear && projectile.CollisionRectangle.Intersects(burger.CollisionRectangle))
+                {
+                    projectile.Active = false;
+                    burger.Health -= GameConstants.TEDDY_BEAR_PROJECTILE_DAMAGE;
+                }
 
             //Check and resolve collisions between teddy bears and projectiles.
             foreach (TeddyBear bear in bears)
@@ -199,6 +212,9 @@ namespace GameProject
             for (int i = bears.Count - 1; i >= 0; i--)
                 if (!bears[i].Active)
                     bears.RemoveAt(i);
+
+            while (bears.Count < GameConstants.MAX_BEARS)
+                SpawnBear();
 
             // clean out inactive projectiles
             for (int i = projectiles.Count - 1; i >= 0; i--)
@@ -295,6 +311,12 @@ namespace GameProject
             TeddyBear newBear = new TeddyBear(Content, "teddybear", x, y, velocity, null, null);
 
             // make sure we don't spawn into a collision
+            List<Rectangle> collisionRectangles = GetCollisionRectangles();
+            while (!CollisionUtils.IsCollisionFree(newBear.CollisionRectangle, collisionRectangles))
+            {
+                newBear.X = GetRandomLocation(GameConstants.SPAWN_BORDER_SIZE, GameConstants.WINDOW_WIDTH - GameConstants.SPAWN_BORDER_SIZE * 2);
+                newBear.Y = GetRandomLocation(GameConstants.SPAWN_BORDER_SIZE, GameConstants.WINDOW_HEIGHT - GameConstants.SPAWN_BORDER_SIZE * 2);
+            }
 
             // add new bear to list
             bears.Add(newBear);
