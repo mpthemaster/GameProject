@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace GameProject
 {
@@ -142,14 +138,32 @@ namespace GameProject
         /// </summary>
         /// <param name="gameTime">game time</param>
         /// <param name="mouse">the current state of the mouse</param>
-        public void Update(GameTime gameTime, MouseState mouse)
+        public void Update(GameTime gameTime, KeyboardState keyboard)
         {
             // burger should only respond to input if it still has health
             if (health > 0)
             {
-                // move burger using mouse and clamp it (the X and Y properties already clamp it).
-                X = mouse.X;
-                Y = mouse.Y;
+                // move burger using the keyboard and clamp it (the X and Y properties already clamp it).
+                int movementX = 0;
+                int movementY = 0;
+                if (keyboard.IsKeyDown(Keys.W))
+                    movementY -= GameConstants.BURGER_MOVEMENT_AMOUNT;
+                if (keyboard.IsKeyDown(Keys.S))
+                    movementY += GameConstants.BURGER_MOVEMENT_AMOUNT;
+                if (keyboard.IsKeyDown(Keys.A))
+                    movementX -= GameConstants.BURGER_MOVEMENT_AMOUNT;
+                if (keyboard.IsKeyDown(Keys.D))
+                    movementX += GameConstants.BURGER_MOVEMENT_AMOUNT;
+
+                //If moving diagonally, reduce the movement speed this frame to prevent the Doom Strafe 40 bug.
+                if ( Math.Abs(movementX) == Math.Abs(movementY))
+                {
+                    movementX /= 2;
+                    movementY /= 2;
+                }
+
+                X += movementX;
+                Y += movementY;
 
                 // update shooting allowed
                 //If shooting is disabled, 
@@ -158,7 +172,7 @@ namespace GameProject
                 {
                     elapsedCooldownTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
 
-                    if (elapsedCooldownTime >= GameConstants.BURGER_COOLDOWN_MILLISECONDS || mouse.LeftButton == ButtonState.Released)
+                    if (elapsedCooldownTime >= GameConstants.BURGER_COOLDOWN_MILLISECONDS || keyboard.IsKeyUp(Keys.Space))
                     {
                         canShoot = true;
                         elapsedCooldownTime = 0;
@@ -168,7 +182,7 @@ namespace GameProject
                 // timer concept (for animations) introduced in Chapter 7
 
                 // shoot if appropriate
-                if (mouse.LeftButton == ButtonState.Pressed && canShoot)
+                if (keyboard.IsKeyDown(Keys.Space) && canShoot)
                 {
                     //Create a new projectile to fire from the burger.
                     canShoot = false;
@@ -177,6 +191,7 @@ namespace GameProject
                     Projectile projectile = new Projectile(projectileType, Game1.GetProjectileSprite(projectileType), X, locationY,
                         -GameConstants.FRENCH_FRIES_PROJECTILE_SPEED);
                     Game1.AddProjectile(projectile);
+                    shootSound.Play();
                 }
             }
         }
